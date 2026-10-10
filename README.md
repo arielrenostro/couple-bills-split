@@ -1,33 +1,33 @@
-# Contas da casa
+# Contas da casa (household bills)
 
-App para Ariel e Isabella dividirem as contas: registram o que cada um pagou, e o app
-calcula o saldo ("quem deve quanto a quem") sempre a partir do histórico.
+An app for a couple to split their shared bills: each one records what they paid,
+and the app works out the balance ("who owes whom") always from the history.
 
-- **frontend/**: PWA (Vite + TypeScript, sem framework), pensado para o celular.
-- **backend/**: API em TypeScript (Lambda) e o domínio do ledger (`src/domain`).
-- **infra/**: AWS CDK (DynamoDB, Lambda com Function URL, S3, CloudFront).
-- **openspec/**: especificação e design (`openspec/changes/bill-split-pwa`).
+- **frontend/**: PWA (Vite + TypeScript, no framework), designed for the phone.
+- **backend/**: TypeScript API (Lambda) and the ledger domain (`src/domain`).
+- **infra/**: AWS CDK (DynamoDB, Lambda with Function URL, S3, CloudFront).
+- **openspec/**: specification and design (`openspec/changes/bill-split-pwa`).
 
 ```
-Celular (PWA) -> CloudFront --- /*      -> S3 (app)
-                           '--- /api/*  -> Lambda (Function URL) -> DynamoDB
+Phone (PWA) -> CloudFront --- /*      -> S3 (app)
+                         '--- /api/*  -> Lambda (Function URL) -> DynamoDB
 ```
 
-## Desenvolvimento local
+## Local development
 
-Precisa de Node 22+ e Docker (DynamoDB Local).
+Requires Node 22+ and Docker (DynamoDB Local).
 
 ```bash
 npm install
-npm run db:local -w backend         # sobe o DynamoDB Local em 127.0.0.1:8000
-npm test                            # backend, frontend e infra
-npm run dev:api -w backend          # API em 127.0.0.1:8787 (usa a senha inicial padrão)
-npm run dev -w frontend             # app em http://127.0.0.1:5173 (proxy /api -> 8787)
+npm run db:local -w backend         # starts DynamoDB Local on 127.0.0.1:8000
+npm test                            # backend, frontend and infra
+npm run dev:api -w backend          # API on 127.0.0.1:8787 (uses the default initial password)
+npm run dev -w frontend             # app on http://127.0.0.1:5173 (proxies /api -> 8787)
 ```
 
-Roteiro de ponta a ponta no navegador (precisa de `npm run build -w frontend`,
-`npx vite preview --port 4173` em `frontend/`, a API local numa **tabela nova** e um
-Chromium; veja os cabeçalhos de `frontend/e2e/`): `npm run e2e`.
+End-to-end script in the browser (needs `npm run build -w frontend`,
+`npx vite preview --port 4173` inside `frontend/`, the local API on a **fresh table**, and a
+Chromium; see the headers of the files in `frontend/e2e/`): `npm run e2e`.
 
 ## Deploy
 
@@ -35,35 +35,37 @@ Chromium; veja os cabeçalhos de `frontend/e2e/`): `npm run e2e`.
 npm run deploy
 ```
 
-Faz o build, o bootstrap do CDK (idempotente), o deploy, publica o site no S3, invalida o
-CloudFront e inicializa a tabela (senha inicial padrão e proporção 50/50). Pode rodar de novo
-para publicar uma versão nova. O endereço aparece no fim e em `cdk-outputs.json`.
+It builds, bootstraps CDK (idempotent), deploys, publishes the site to S3, invalidates
+CloudFront and initializes the table (default initial password and a 50/50 split). It can be
+run again to publish a new version. The address is printed at the end and written to
+`cdk-outputs.json`.
 
-O CloudFront fica no **plano gratuito de preço fixo** (US$ 0, sem cobrança de excedente);
-`scripts/plano-gratuito.sh` faz a assinatura (e o CDK cria o WAF que o plano exige). Para
-**remover** a stack, cancele antes o plano da distribuição, porque uma distribuição com plano
-não pode ser excluída: `aws pricing-plan-manager cancel-subscription` (planos Free cancelam
-na hora).
+CloudFront runs on the **free flat-rate plan** (US$ 0, no overage charges);
+`scripts/plano-gratuito.sh` creates the subscription (and CDK creates the WAF the plan
+requires). To **remove** the stack, first cancel the distribution's plan, because a
+distribution that has a plan can't be deleted: `aws pricing-plan-manager cancel-subscription`
+(Free plans are cancelled immediately).
 
-A tabela do DynamoDB tem proteção contra exclusão e é mantida mesmo se a stack for
-destruída (`cdk destroy`); para apagá-la de vez, remova a proteção e a tabela à mão.
+The DynamoDB table has deletion protection and is kept even if the stack is destroyed
+(`cdk destroy`); to delete it for good, remove the protection and the table by hand.
 
-## Trocar a senha
+## Changing the password
 
-A senha (única, dos dois) fica no item `CONFIG/main` como `sha256(senha + salt)`:
+The password (a single one, shared by both) is stored in the `CONFIG/main` item as
+`sha256(password + salt)`:
 
 ```bash
-TABELA=<nome da tabela, em cdk-outputs.json>
+TABLE=<table name, from cdk-outputs.json>
 SALT=$(openssl rand -hex 8)
-HASH=$(printf '%s' "NOVA_SENHA$SALT" | sha256sum | cut -d' ' -f1)
-aws dynamodb update-item --table-name "$TABELA" \
+HASH=$(printf '%s' "NEW_PASSWORD$SALT" | sha256sum | cut -d' ' -f1)
+aws dynamodb update-item --table-name "$TABLE" \
   --key '{"pk":{"S":"CONFIG"},"sk":{"S":"main"}}' \
   --update-expression 'SET salt = :s, #h = :h' \
   --expression-attribute-names '{"#h":"hash"}' \
   --expression-attribute-values "{\":s\":{\"S\":\"$SALT\"},\":h\":{\"S\":\"$HASH\"}}"
 ```
 
-Trocar a senha **não** desloga ninguém: os tokens duram 3650 dias. Para invalidar todos os
-tokens (por exemplo, celular perdido), troque o `jwtSecret` do mesmo item por um valor
-novo e aleatório (`openssl rand -base64 32`); vale em até 5 minutos, que é o tempo que a
-Lambda guarda o segredo.
+Changing the password does **not** sign anyone out: tokens last 3650 days. To invalidate all
+tokens (for example, a lost phone), replace the `jwtSecret` of the same item with a new
+random value (`openssl rand -base64 32`); it takes effect within 5 minutes, which is how long
+the Lambda caches the secret.
