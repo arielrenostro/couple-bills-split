@@ -1,0 +1,10 @@
+node_modules/
+dist/
+cdk.out/
+*.tsbuildinfo
+.env
+.env.*
+cdk-outputs.json
+cdk.context.json
+.claude/settings.local.json
+*.log

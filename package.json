@@ -1,0 +1,19 @@
+{
+  "name": "contas-da-casa",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "infra"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "deploy": "bash scripts/deploy.sh",
+    "e2e": "node frontend/e2e/roteiro.mjs && node frontend/e2e/pwa.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
