@@ -193,11 +193,20 @@ h2 {
   color: var(--perigo);
 }
 
+.acoes {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.acoes .botao.destaque {
+  margin: 0;
+}
+
 .atalhos {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 12px;
 }
 
 .atalhos .botao {
@@ -217,24 +226,6 @@ h2 {
 
 .painel h2 {
   margin-bottom: 8px;
-}
-
-.saldo-principal {
-  background: var(--acento-suave);
-  border-color: transparent;
-  text-align: center;
-  padding: 24px 16px;
-}
-
-.saldo-principal .frase-saldo {
-  font-size: 1.7rem;
-  font-weight: 750;
-  line-height: 1.2;
-  margin-top: 4px;
-}
-
-.saldo-principal.quitado .frase-saldo {
-  color: var(--acento);
 }
 
 .rotulo {
@@ -269,15 +260,42 @@ dl {
 }
 
 /* Resumo do ciclo */
-.total-ciclo {
+.painel-ciclo {
+  padding: 14px;
+}
+
+.metricas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   margin-bottom: 12px;
 }
 
-.total-valor {
-  font-size: 2rem;
+.metrica {
+  flex: 1 1 130px;
+  min-width: 0;
+}
+
+.total-valor,
+.divida-valor {
+  font-size: 1.5rem;
   font-weight: 750;
-  line-height: 1.15;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.divida-valor {
+  color: var(--acento);
+}
+
+.divida.quitada .rotulo,
+.divida.quitada .divida-valor {
+  color: var(--texto-suave);
+}
+
+.divida.quitada .divida-valor {
+  font-weight: 600;
 }
 
 .tabela-ciclo {
@@ -323,23 +341,117 @@ dl {
 /* Telas muito estreitas: valores de cinco dígitos ainda cabem lado a lado. */
 @media (max-width: 360px) {
   .tabela-ciclo {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
   }
 
   .tabela-ciclo th,
   .tabela-ciclo td {
-    padding-left: 6px;
+    padding-left: 4px;
   }
 
-  .total-valor {
-    font-size: 1.75rem;
+  .total-valor,
+  .divida-valor {
+    font-size: 1.375rem;
   }
+}
+
+/* Calculadora de depósito */
+.partes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+}
+
+.parte {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--borda);
+}
+
+.parte:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.parte:last-child {
+  padding-bottom: 0;
+}
+
+.parte dt {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.parte .pct {
+  margin-left: 2px;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+
+.parte dd {
+  margin: 0;
+  font-size: clamp(1.3rem, 7vw, 1.6rem);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.formulario > .painel {
+  margin-bottom: 0;
+}
+
+.painel-tabela {
+  padding-inline: 12px;
+}
+
+.tabela-padroes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: clamp(0.74rem, 3.6vw, 1rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela-padroes caption {
+  padding-bottom: 8px;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.tabela-padroes th,
+.tabela-padroes td {
+  padding: 9px 0 9px 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tabela-padroes thead th {
+  color: var(--texto-suave);
+  font-size: 0.9em;
+  font-weight: 400;
+}
+
+.tabela-padroes tbody tr {
+  border-top: 1px solid var(--borda);
+}
+
+.tabela-padroes tbody th {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.tabela-padroes tbody td {
+  font-weight: 600;
 }
 
 /* Formulários */
 .formulario,
 .login {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -358,6 +470,78 @@ input {
   color: var(--texto);
   font: inherit;
   font-size: 1.1rem; /* >= 16px evita o zoom automático do iOS */
+}
+
+/* Data: o texto DD/MM/AAAA é nosso; o input nativo fica transparente por cima. */
+.campo-data {
+  position: relative;
+  display: block;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--borda);
+  border-radius: 12px;
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 1.1rem;
+  line-height: 30px;
+}
+
+.campo-data:focus-within {
+  outline: 3px solid var(--acento);
+  outline-offset: 2px;
+}
+
+.campo-data input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.campo-data input:focus-visible {
+  outline: none;
+}
+
+/* Mouse e teclado (PC): o campo nativo, visível e editável por segmentos. */
+@media (hover: hover) and (pointer: fine) {
+  .campo-data {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    line-height: inherit;
+  }
+
+  .campo-data:focus-within {
+    outline: none;
+  }
+
+  .campo-data-texto {
+    display: none;
+  }
+
+  .campo-data input {
+    position: static;
+    height: auto;
+    min-height: 52px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--borda);
+    opacity: 1;
+    -webkit-appearance: auto;
+    appearance: auto;
+  }
+
+  .campo-data input:focus-visible {
+    outline: 3px solid var(--acento);
+    outline-offset: 2px;
+  }
 }
 
 input:focus-visible,
@@ -404,10 +588,67 @@ button:focus-visible {
   font-weight: 700;
 }
 
-.custom {
+/* Tela de Compra: sugestões e resumo da divisão */
+.compra {
   display: grid;
-  gap: 6px;
-  margin-top: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+/* O dobro do espaço normal entre a lista e o campo Descrição. */
+.sugestoes-campo {
+  margin-bottom: 16px;
+}
+
+.sugestoes .vazio {
+  padding: 4px 0;
+  text-align: left;
+}
+
+.sugestoes ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sugestao {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--borda);
+  border-radius: 12px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sugestao:hover {
+  background: var(--acento-suave);
+}
+
+.sugestao-descricao {
+  overflow: hidden;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sugestao-valor {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.sugestao-divisao {
+  grid-column: 1 / -1;
+  color: var(--texto-suave);
+  font-size: 0.95rem;
 }
 
 .erro-campo {

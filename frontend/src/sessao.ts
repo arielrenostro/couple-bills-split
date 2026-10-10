@@ -1,3 +1,4 @@
+import { esquecerProporcao } from "./proporcaoVigente";
 import type { Pessoa } from "./tipos";
 
 const CHAVE_TOKEN = "contas.token";
@@ -48,6 +49,7 @@ export function iniciarSessao(token: string, usuario: Pessoa): void {
 }
 
 export function encerrarSessao(): void {
+  esquecerProporcao();
   apagar(CHAVE_TOKEN);
   apagar(CHAVE_USUARIO);
 }

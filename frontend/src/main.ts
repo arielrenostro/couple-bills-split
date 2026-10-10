@@ -3,6 +3,7 @@ import { definirAoPerderSessao } from "./api";
 import { encerrarSessao, lerToken, lerUsuario } from "./sessao";
 import { telaAcerto } from "./telas/acerto";
 import { telaCompra } from "./telas/compra";
+import { telaDeposito } from "./telas/deposito";
 import { telaHistorico } from "./telas/historico";
 import { telaLogin } from "./telas/login";
 import { telaProporcao } from "./telas/proporcao";
@@ -44,6 +45,7 @@ function renderizar(): void {
     "/historico": () => telaHistorico(ctx),
     "/proporcao": () => telaProporcao(ctx),
     "/acerto": () => telaAcerto(ctx),
+    "/deposito": () => telaDeposito(ctx),
   };
   const tela = telas[rota] ?? telas["/"]!;
   raiz.replaceChildren(tela());

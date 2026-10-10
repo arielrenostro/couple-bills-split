@@ -1,6 +1,6 @@
 import { obterSaldo, registrar } from "../api";
 import { formatarData, formatarMoeda, formatarValorCampo, hoje, lerValor, nomePessoa, outra } from "../formato";
-import { campo, caixaDeErro, carregando, confirmar, mensagemDeErro, seletorPessoa, topo, type Contexto } from "../ui/componentes";
+import { campo, campoData, caixaDeErro, carregando, confirmar, mensagemDeErro, seletorPessoa, topo, type Contexto } from "../ui/componentes";
 import { h } from "../ui/dom";
 import type { Saldo } from "../tipos";
 
@@ -85,14 +85,14 @@ function formulario(saldo: Saldo, ctx: Contexto): HTMLElement {
     ),
     h("div", { class: "campo" }, h("span", { class: "rotulo" }, "Quem pagou"), quem.elemento),
     campo("Valor (R$)", valor, "Já vem com o saldo inteiro; mude para um acerto parcial."),
-    campo("Data", data),
+    campo("Data", campoData(data)),
     erro,
     enviar,
   );
 }
 
 export function telaAcerto(ctx: Contexto): HTMLElement {
-  const raiz = h("main", { class: "tela" }, topo("Paguei", () => ctx.navegar("/")));
+  const raiz = h("main", { class: "tela" }, topo("Adicionar acerto", () => ctx.navegar("/")));
   const corpo = h("div", null, carregando());
   raiz.append(corpo);
 

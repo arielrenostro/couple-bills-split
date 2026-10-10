@@ -1,5 +1,5 @@
 import { ErroApi } from "../api";
-import { nomePessoa } from "../formato";
+import { formatarData, nomePessoa } from "../formato";
 import type { Pessoa } from "../tipos";
 import { h } from "./dom";
 
@@ -76,6 +76,34 @@ export function campo(rotulo: string, controle: HTMLElement, ajuda?: string): HT
     h("span", { class: "rotulo" }, rotulo),
     controle,
     ajuda ? h("span", { class: "ajuda" }, ajuda) : null,
+  );
+}
+
+/**
+ * Envolve um `<input type="date">` mostrando a data como DD/MM/AAAA. O iOS
+ * formata o campo nativo pela região do aparelho ("10 Oct 2026") e ainda lhe
+ * dá largura própria; aqui o campo real fica transparente por cima do texto,
+ * então o toque continua abrindo o seletor nativo.
+ */
+export function campoData(input: HTMLInputElement): HTMLElement {
+  const texto = h("span", { class: "campo-data-texto" });
+  const atualizar = () => {
+    texto.textContent = input.value ? formatarData(input.value) : "dd/mm/aaaa";
+  };
+  atualizar();
+  input.addEventListener("input", atualizar);
+  input.addEventListener("change", atualizar);
+  return h("span", { class: "campo-data" }, texto, input);
+}
+
+/** Linha da tabela de Ariel/Isabella (`tabela-ciclo`): rótulo e um valor por pessoa. */
+export function linhaDaTabela(rotulo: string, ariel: string, isabella: string, classe?: string): HTMLElement {
+  return h(
+    "tr",
+    { class: classe },
+    h("th", { scope: "row" }, rotulo),
+    h("td", null, ariel),
+    h("td", null, isabella),
   );
 }
 

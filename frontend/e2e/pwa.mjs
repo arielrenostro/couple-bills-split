@@ -73,9 +73,9 @@ await ok("login funciona e o shell fica no cache", async () => {
   await page.click('.segmento[data-pessoa="ariel"]');
   await page.fill('input[name="senha"]', "batman");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await page.waitForSelector(".frase-saldo");
+  await page.waitForSelector(".divida");
   const chaves = await page.evaluate(async () => {
-    const c = await caches.open("contas-v3");
+    const c = await caches.open("contas-v8");
     return (await c.keys()).map((r) => new URL(r.url).pathname);
   });
   if (!chaves.includes("/")) throw new Error(`sem "/" no cache: ${chaves}`);
@@ -103,10 +103,10 @@ await ok("sem rede, o app abre e avisa que está sem conexão (sem mostrar saldo
   await page.waitForSelector(".erro");
   const texto = await page.locator(".erro").innerText();
   if (!texto.includes("Sem conexão")) throw new Error(texto);
-  if (await page.locator(".frase-saldo").count()) throw new Error("mostrou saldo sem rede");
+  if (await page.locator(".divida").count()) throw new Error("mostrou saldo sem rede");
   await context.setOffline(false);
   await page.getByRole("button", { name: "Tentar de novo" }).click();
-  await page.waitForSelector(".frase-saldo");
+  await page.waitForSelector(".divida");
 });
 
 await browser.close();

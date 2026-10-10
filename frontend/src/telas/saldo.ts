@@ -1,62 +1,39 @@
 import { obterSaldo } from "../api";
-import { formatarMoeda, formatarPorcentagem, fraseSaldo, nomePessoa } from "../formato";
-import { caixaDeErro, carregando, type Contexto } from "../ui/componentes";
+import { formatarMoeda, formatarPorcentagem, formatarPorcentagemDecimal, nomePessoa } from "../formato";
+import { proporcaoEfetiva } from "../proporcaoEfetiva";
+import { lembrarProporcao } from "../proporcaoVigente";
+import { caixaDeErro, carregando, linhaDaTabela, type Contexto } from "../ui/componentes";
 import { h } from "../ui/dom";
 import { menuConfiguracoes } from "../ui/menu";
 import type { Saldo } from "../tipos";
 
-function linhaDaTabela(rotulo: string, ariel: string, isabella: string, classe?: string): HTMLElement {
-  return h(
-    "tr",
-    { class: classe },
-    h("th", { scope: "row" }, rotulo),
-    h("td", null, ariel),
-    h("td", null, isabella),
-  );
-}
-
 function conteudo(s: Saldo, ctx: Contexto): HTMLElement {
   const c = s.cicloAberto;
   const devedor = s.saldo ? nomePessoa(s.saldo.devedor) : null;
+  const efetiva = proporcaoEfetiva(c.parte, c.totalDespesas);
 
   return h(
     "div",
     { class: "saldo" },
     h(
       "section",
-      { class: s.saldo ? "painel saldo-principal" : "painel saldo-principal quitado" },
-      h("p", { class: "rotulo" }, s.saldo ? "Saldo" : "Tudo certo"),
-      h("p", { class: "frase-saldo", dataset: { devedor: devedor ?? "" } }, fraseSaldo(s.saldo)),
-    ),
-    h(
-      "button",
-      { class: "botao grande destaque", type: "button", onclick: () => ctx.navegar("/compra") },
-      "+ Adicionar conta",
-    ),
-    h(
-      "div",
-      { class: "atalhos" },
-      h(
-        "button",
-        {
-          class: "botao secundario",
-          type: "button",
-          disabled: !s.saldo,
-          onclick: () => ctx.navegar("/acerto"),
-        },
-        "Paguei",
-      ),
-      h("button", { class: "botao secundario", type: "button", onclick: () => ctx.navegar("/historico") }, "Histórico"),
-    ),
-    h(
-      "section",
-      { class: "painel" },
+      { class: "painel painel-ciclo" },
       h("h2", null, "Ciclo atual"),
       h(
         "div",
-        { class: "total-ciclo" },
-        h("p", { class: "rotulo" }, "Total das contas"),
-        h("p", { class: "total-valor" }, formatarMoeda(c.totalDespesas)),
+        { class: "metricas" },
+        h(
+          "div",
+          { class: "metrica" },
+          h("p", { class: "rotulo" }, "Total das contas"),
+          h("p", { class: "total-valor" }, formatarMoeda(c.totalDespesas)),
+        ),
+        h(
+          "div",
+          { class: s.saldo ? "metrica divida" : "metrica divida quitada", dataset: { devedor: devedor ?? "" } },
+          h("p", { class: "rotulo" }, s.saldo ? `${devedor} deve` : "Quites"),
+          h("p", { class: "divida-valor" }, formatarMoeda(s.saldo?.valor ?? 0)),
+        ),
       ),
       h(
         "table",
@@ -75,9 +52,40 @@ function conteudo(s: Saldo, ctx: Contexto): HTMLElement {
             formatarPorcentagem(s.proporcao.isabella),
             "suave",
           ),
+          linhaDaTabela(
+            "Efetiva",
+            efetiva ? formatarPorcentagemDecimal(efetiva.ariel) : "—",
+            efetiva ? formatarPorcentagemDecimal(efetiva.isabella) : "—",
+            "suave",
+          ),
           linhaDaTabela("Pagou", formatarMoeda(c.pago.ariel), formatarMoeda(c.pago.isabella)),
           linhaDaTabela("Parte", formatarMoeda(c.parte.ariel), formatarMoeda(c.parte.isabella)),
         ),
+      ),
+    ),
+    h(
+      "div",
+      { class: "acoes" },
+      h(
+        "button",
+        { class: "botao grande destaque", type: "button", onclick: () => ctx.navegar("/compra") },
+        "+ Adicionar conta",
+      ),
+      h(
+        "button",
+        {
+          class: "botao grande secundario",
+          type: "button",
+          disabled: !s.saldo,
+          onclick: () => ctx.navegar("/acerto"),
+        },
+        "Adicionar acerto",
+      ),
+      h(
+        "div",
+        { class: "atalhos" },
+        h("button", { class: "botao secundario", type: "button", onclick: () => ctx.navegar("/historico") }, "Histórico"),
+        h("button", { class: "botao secundario", type: "button", onclick: () => ctx.navegar("/deposito") }, "Depósito"),
       ),
     ),
   );
@@ -90,7 +98,9 @@ export function telaSaldo(ctx: Contexto, aoSair: () => void): HTMLElement {
   const carregar = async () => {
     corpo.replaceChildren(carregando());
     try {
-      corpo.replaceChildren(conteudo(await obterSaldo(), ctx));
+      const saldo = await obterSaldo();
+      lembrarProporcao(saldo.proporcao);
+      corpo.replaceChildren(conteudo(saldo, ctx));
     } catch (e) {
       corpo.replaceChildren(caixaDeErro(e, carregar));
     }

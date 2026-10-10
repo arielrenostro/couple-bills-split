@@ -72,6 +72,11 @@ export function formatarPorcentagem(pct: number): string {
   return `${pct}%`;
 }
 
+/** Décimos de ponto percentual -> "60%" (inteiro) ou "58,3%" (uma casa decimal, vírgula). */
+export function formatarPorcentagemDecimal(decimos: number): string {
+  return decimos % 10 === 0 ? `${decimos / 10}%` : `${(decimos / 10).toFixed(1).replace(".", ",")}%`;
+}
+
 /** "Isabella deve R$ 50,00 ao Ariel" ou "Ninguém deve nada". */
 export function fraseSaldo(saldo: SaldoDescrito | null): string {
   if (!saldo) return "Ninguém deve nada";
