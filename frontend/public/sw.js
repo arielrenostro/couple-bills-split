@@ -1,6 +1,6 @@
 // Service worker do app: guarda só o "casco" (HTML, JS, CSS, ícones) para abrir
 // rápido. A API (/api/*) nunca passa pelo cache: saldo velho seria pior que erro.
-const CACHE = "contas-v2";
+const CACHE = "contas-v3";
 
 self.addEventListener("install", () => self.skipWaiting());
 

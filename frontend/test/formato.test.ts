@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatarData,
   formatarMoeda,
+  formatarPorcentagem,
   formatarValorCampo,
   fraseSaldo,
   fraseSaldoAssinado,
@@ -79,5 +80,15 @@ describe("frases de saldo", () => {
   it("converte o saldo assinado (positivo: Isabella deve ao Ariel)", () => {
     expect(normalizar(fraseSaldoAssinado(5000))).toBe("Isabella deve R$ 50,00 ao Ariel");
     expect(normalizar(fraseSaldoAssinado(-3000))).toBe("Ariel deve R$ 30,00 à Isabella");
+  });
+});
+
+describe("formatarPorcentagem", () => {
+  it.each([
+    [60, "60%"],
+    [0, "0%"],
+    [100, "100%"],
+  ])("escreve %i como %j", (pct, texto) => {
+    expect(formatarPorcentagem(pct)).toBe(texto);
   });
 });

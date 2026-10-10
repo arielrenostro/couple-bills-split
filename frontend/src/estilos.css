@@ -92,14 +92,55 @@ h2 {
   cursor: pointer;
 }
 
-.sair {
-  min-height: 44px;
-  padding: 0 12px;
+.configuracoes {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-right: -8px;
   border: 0;
+  border-radius: 50%;
   background: transparent;
   color: var(--texto-suave);
-  font: inherit;
   cursor: pointer;
+}
+
+/* Menu de configurações */
+.menu {
+  position: fixed;
+  left: auto;
+  margin: 0;
+  padding: 6px;
+  min-width: 180px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 22%);
+}
+
+.menu::backdrop {
+  background: transparent;
+}
+
+.menu-itens {
+  display: grid;
+}
+
+.menu-item {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: var(--acento-suave);
 }
 
 /* Botões */
@@ -154,7 +195,7 @@ h2 {
 
 .atalhos {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -225,6 +266,74 @@ dl {
   margin: 0;
   font-weight: 600;
   text-align: right;
+}
+
+/* Resumo do ciclo */
+.total-ciclo {
+  margin-bottom: 12px;
+}
+
+.total-valor {
+  font-size: 2rem;
+  font-weight: 750;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela-ciclo {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela-ciclo th,
+.tabela-ciclo td {
+  padding: 9px 0 9px 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tabela-ciclo th[scope="row"] {
+  padding-left: 0;
+  color: var(--texto-suave);
+  font-weight: 400;
+  text-align: left;
+}
+
+.tabela-ciclo thead th {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.tabela-ciclo tbody tr {
+  border-top: 1px solid var(--borda);
+}
+
+.tabela-ciclo tbody td {
+  font-weight: 600;
+}
+
+.tabela-ciclo tr.suave td {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+/* Telas muito estreitas: valores de cinco dígitos ainda cabem lado a lado. */
+@media (max-width: 360px) {
+  .tabela-ciclo {
+    font-size: 0.8125rem;
+  }
+
+  .tabela-ciclo th,
+  .tabela-ciclo td {
+    padding-left: 6px;
+  }
+
+  .total-valor {
+    font-size: 1.75rem;
+  }
 }
 
 /* Formulários */

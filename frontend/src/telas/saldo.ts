@@ -1,11 +1,18 @@
 import { obterSaldo } from "../api";
-import { formatarMoeda, fraseSaldo, nomePessoa, textoProporcao } from "../formato";
+import { formatarMoeda, formatarPorcentagem, fraseSaldo, nomePessoa } from "../formato";
 import { caixaDeErro, carregando, type Contexto } from "../ui/componentes";
 import { h } from "../ui/dom";
+import { menuConfiguracoes } from "../ui/menu";
 import type { Saldo } from "../tipos";
 
-function linha(rotulo: string, valor: string): HTMLElement {
-  return h("div", { class: "linha" }, h("dt", null, rotulo), h("dd", null, valor));
+function linhaDaTabela(rotulo: string, ariel: string, isabella: string, classe?: string): HTMLElement {
+  return h(
+    "tr",
+    { class: classe },
+    h("th", { scope: "row" }, rotulo),
+    h("td", null, ariel),
+    h("td", null, isabella),
+  );
 }
 
 function conteudo(s: Saldo, ctx: Contexto): HTMLElement {
@@ -40,21 +47,37 @@ function conteudo(s: Saldo, ctx: Contexto): HTMLElement {
         "Paguei",
       ),
       h("button", { class: "botao secundario", type: "button", onclick: () => ctx.navegar("/historico") }, "Histórico"),
-      h("button", { class: "botao secundario", type: "button", onclick: () => ctx.navegar("/proporcao") }, "Proporção"),
     ),
     h(
       "section",
       { class: "painel" },
       h("h2", null, "Ciclo atual"),
       h(
-        "dl",
-        null,
-        linha("Proporção (Ariel/Isabella)", textoProporcao(s.proporcao)),
-        linha("Total das contas", formatarMoeda(c.totalDespesas)),
-        linha("Ariel pagou", formatarMoeda(c.pago.ariel)),
-        linha("Isabella pagou", formatarMoeda(c.pago.isabella)),
-        linha("Parte do Ariel", formatarMoeda(c.parte.ariel)),
-        linha("Parte da Isabella", formatarMoeda(c.parte.isabella)),
+        "div",
+        { class: "total-ciclo" },
+        h("p", { class: "rotulo" }, "Total das contas"),
+        h("p", { class: "total-valor" }, formatarMoeda(c.totalDespesas)),
+      ),
+      h(
+        "table",
+        { class: "tabela-ciclo" },
+        h(
+          "thead",
+          null,
+          h("tr", null, h("td"), h("th", { scope: "col" }, "Ariel"), h("th", { scope: "col" }, "Isabella")),
+        ),
+        h(
+          "tbody",
+          null,
+          linhaDaTabela(
+            "Proporção",
+            formatarPorcentagem(s.proporcao.ariel),
+            formatarPorcentagem(s.proporcao.isabella),
+            "suave",
+          ),
+          linhaDaTabela("Pagou", formatarMoeda(c.pago.ariel), formatarMoeda(c.pago.isabella)),
+          linhaDaTabela("Parte", formatarMoeda(c.parte.ariel), formatarMoeda(c.parte.isabella)),
+        ),
       ),
     ),
   );
@@ -78,7 +101,10 @@ export function telaSaldo(ctx: Contexto, aoSair: () => void): HTMLElement {
       "header",
       { class: "topo" },
       h("h1", null, `Olá, ${nomePessoa(ctx.usuario)}`),
-      h("button", { class: "sair", type: "button", onclick: aoSair }, "Sair"),
+      menuConfiguracoes([
+        { rotulo: "Proporção", aoEscolher: () => ctx.navegar("/proporcao") },
+        { rotulo: "Sair", aoEscolher: aoSair },
+      ]),
     ),
     corpo,
   );

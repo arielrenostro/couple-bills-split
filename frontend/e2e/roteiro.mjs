@@ -70,6 +70,15 @@ async function semRolagemHorizontal() {
   if (largura > janela) throw new Error(`rolagem horizontal: ${largura} > ${janela}`);
 }
 const botao = (nome) => page.getByRole("button", { name: nome, exact: true });
+async function escolherNoMenu(item) {
+  await botao("Configurações").click();
+  await page.getByRole("menuitem", { name: item, exact: true }).click();
+}
+async function celulasDaTabela() {
+  return page.$$eval(".tabela-ciclo tbody tr", (linhas) =>
+    linhas.map((l) => [...l.children].map((c) => c.textContent.replace(/\u00a0/g, " "))),
+  );
+}
 
 await page.goto(url);
 
@@ -100,6 +109,9 @@ await ok("saldo inicial: ninguém deve nada, botão de adicionar em destaque", a
   const caixa = await destaque.boundingBox();
   if (!caixa || caixa.height < 56) throw new Error(`botão pequeno: ${caixa?.height}`);
   if (!(await botao("Paguei").isDisabled())) throw new Error("Paguei deveria estar desabilitado sem saldo");
+  if ((await botao("Sair").count()) !== 0) throw new Error("Sair deveria existir só dentro do menu");
+  if ((await botao("Proporção").count()) !== 0) throw new Error("Proporção deveria existir só dentro do menu");
+  if ((await texto(".total-valor")) !== nbsp("R$ 0,00")) throw new Error(await texto(".total-valor"));
   await semRolagemHorizontal();
   await foto("02-saldo-zerado");
 });
@@ -141,8 +153,22 @@ await ok("valor inválido na compra é recusado sem gravar", async () => {
   await esperaTexto(".frase-saldo", "Ariel deve R$ 10,00 à Isabella");
 });
 
+await ok("menu: abre, fecha por Esc e por toque fora, e marca aria-expanded", async () => {
+  await botao("Configurações").click();
+  await page.getByRole("menuitem", { name: "Proporção", exact: true }).waitFor();
+  if ((await botao("Configurações").getAttribute("aria-expanded")) !== "true") throw new Error("aria-expanded deveria ser true");
+  await foto("04b-menu");
+  await page.keyboard.press("Escape");
+  await page.waitForSelector("dialog.menu", { state: "detached" });
+  if ((await botao("Configurações").getAttribute("aria-expanded")) !== "false") throw new Error("aria-expanded deveria ser false");
+  await botao("Configurações").click();
+  await page.mouse.click(20, 600);
+  await page.waitForSelector("dialog.menu", { state: "detached" });
+  if (!page.url().endsWith("#/") && !page.url().endsWith("/")) throw new Error(`URL mudou: ${page.url()}`);
+});
+
 await ok("proporção: preview não grava; confirmar grava e reaplica ao ciclo", async () => {
-  await botao("Proporção").click();
+  await escolherNoMenu("Proporção");
   await page.waitForSelector('input[name="pctAriel"]');
   await page.fill('input[name="pctAriel"]', "60");
   await botao("Ver prévia").click();
@@ -157,7 +183,7 @@ await ok("proporção: preview não grava; confirmar grava e reaplica ao ciclo",
   await page.getByRole("button", { name: "Voltar", exact: true }).click();
   await esperaTexto(".frase-saldo", "Ariel deve R$ 10,00 à Isabella");
 
-  await botao("Proporção").click();
+  await escolherNoMenu("Proporção");
   await page.fill('input[name="pctAriel"]', "60");
   await botao("Ver prévia").click();
   await page.waitForSelector(".previa");
@@ -199,6 +225,15 @@ await ok("confirmar a remoção apaga o lançamento e recalcula o saldo", async 
   await page.getByRole("button", { name: "Voltar", exact: true }).click();
   // Sobra só o mercado (Ariel pagou 120): a Isabella deve 40% = 48,00.
   await esperaTexto(".frase-saldo", "Isabella deve R$ 48,00 ao Ariel");
+  if (!(await texto(".total-valor")).includes("120,00")) throw new Error(await texto(".total-valor"));
+  const esperado = [
+    ["Proporção", "60%", "40%"],
+    ["Pagou", nbsp("R$ 120,00"), nbsp("R$ 0,00")],
+    ["Parte", nbsp("R$ 72,00"), nbsp("R$ 48,00")],
+  ];
+  if (JSON.stringify(await celulasDaTabela()) !== JSON.stringify(esperado)) throw new Error(JSON.stringify(await celulasDaTabela()));
+  await semRolagemHorizontal();
+  await foto("04c-ciclo-tabela");
 });
 
 await ok("Paguei: valor vem com o saldo e a confirmação avisa que fecha o ciclo", async () => {
@@ -267,7 +302,7 @@ await ok("recarregar mantém a sessão; Sair volta ao login", async () => {
   await page.waitForSelector(".cartao");
   await page.goto(url);
   await page.waitForSelector(".frase-saldo");
-  await page.getByRole("button", { name: "Sair" }).click();
+  await escolherNoMenu("Sair");
   await page.waitForSelector("form.login");
   if (await page.evaluate(() => localStorage.getItem("contas.token"))) throw new Error("token não foi apagado");
 });

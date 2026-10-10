@@ -75,7 +75,7 @@ await ok("login funciona e o shell fica no cache", async () => {
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await page.waitForSelector(".frase-saldo");
   const chaves = await page.evaluate(async () => {
-    const c = await caches.open("contas-v2");
+    const c = await caches.open("contas-v3");
     return (await c.keys()).map((r) => new URL(r.url).pathname);
   });
   if (!chaves.includes("/")) throw new Error(`sem "/" no cache: ${chaves}`);

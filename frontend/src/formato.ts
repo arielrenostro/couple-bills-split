@@ -67,6 +67,11 @@ export function textoProporcao(p: Proporcao): string {
   return `${p.ariel}/${p.isabella}`;
 }
 
+/** 60 -> "60%". */
+export function formatarPorcentagem(pct: number): string {
+  return `${pct}%`;
+}
+
 /** "Isabella deve R$ 50,00 ao Ariel" ou "Ninguém deve nada". */
 export function fraseSaldo(saldo: SaldoDescrito | null): string {
   if (!saldo) return "Ninguém deve nada";
